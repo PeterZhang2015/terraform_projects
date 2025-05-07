@@ -1,0 +1,76 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI-TestTerraformProject1
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches:
+    - "master"
+    paths: 
+    - "TestTerraformProject1/**"
+  pull_request:
+    branches:
+    - "master"
+    paths: 
+    - "TestTerraformProject1/**"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  terraform-validate:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write  # Needed to write PR comments
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.11.4  # or your preferred version
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+
+      - name: Run Terraform Validate and Capture Output
+        id: validate
+        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+        run: |
+          set +e
+          OUTPUT=$(terraform validate -no-color 2>&1)
+          echo "$OUTPUT"
+          echo "result<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          exit 0  # Don't fail job if validate fails, just post the output
+
+      - name: Comment on PR with Validation Results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `### 🧪 Terraform Validate Output
+                          \`\`\`
+                          ${{ steps.validate.outputs.result }}
+                          \`\`\`
+                          `;
+
+            github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
