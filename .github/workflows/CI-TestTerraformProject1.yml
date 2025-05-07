@@ -36,7 +36,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.11.4  # or your preferred version
-
+          
       - name: Terraform Init
         run: terraform init
         working-directory: TestTerraformProject1/environments/dev
