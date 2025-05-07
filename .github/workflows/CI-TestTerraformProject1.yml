@@ -7,14 +7,14 @@ on:
   # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
     branches:
-    - "master"
+      - master
     paths: 
-    - "TestTerraformProject1/**"
+      - "TestTerraformProject1/**"
   pull_request:
     branches:
-    - "master"
+      - master
     paths: 
-    - "TestTerraformProject1/**"
+      - "TestTerraformProject1/**"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -39,15 +39,15 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+        working-directory: TestTerraformProject1/environments/dev
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
-        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+        working-directory: TestTerraformProject1/environments/dev
 
       - name: Run Terraform Validate and Capture Output
         id: validate
-        working-directory: terraform_projects/TestTerraformProject1/environments/dev
+        working-directory: TestTerraformProject1/environments/dev
         run: |
           set +e
           OUTPUT=$(terraform validate -no-color 2>&1)
