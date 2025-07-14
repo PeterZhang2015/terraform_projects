@@ -6,7 +6,7 @@ variable "ami_id" {
 
 variable "instance_type" {
   type        = string
-  description = "EC2 instance type."
+  description = "EC2 instance type test."
   default     = "t2.micro"
 }
 
