@@ -1,0 +1,83 @@
+name: 'Terraform Apply'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'environments/**'
+      - 'modules/**'
+  
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  TF_VERSION: '1.5.0'
+  AWS_REGION: 'us-east-1'
+
+jobs:
+  terraform-apply:
+    name: 'Terraform Apply'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    
+    defaults:
+      run:
+        working-directory: ./environments/${{ github.event.inputs.environment || 'dev' }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Terraform Format Check
+      run: terraform fmt -check -recursive
+
+    - name: Terraform Init
+      run: terraform init
+      env:
+        TF_VAR_key_name: ${{ secrets.AWS_KEY_PAIR_NAME }}
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+      env:
+        TF_VAR_key_name: ${{ secrets.AWS_KEY_PAIR_NAME }}
+        TF_VAR_allowed_cidr_blocks: '["${{ secrets.ALLOWED_CIDR }}"]'
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+      env:
+        TF_VAR_key_name: ${{ secrets.AWS_KEY_PAIR_NAME }}
+        TF_VAR_allowed_cidr_blocks: '["${{ secrets.ALLOWED_CIDR }}"]'
+
+    - name: Terraform Output
+      run: terraform output -json > terraform-outputs.json
+
+    - name: Upload Terraform Outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: terraform-outputs-${{ github.event.inputs.environment || 'dev' }}
+        path: ./environments/${{ github.event.inputs.environment || 'dev' }}/terraform-outputs.json

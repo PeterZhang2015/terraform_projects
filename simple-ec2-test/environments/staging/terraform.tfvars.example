@@ -1,0 +1,16 @@
+# Example Terraform Variables for Staging Environment
+# Copy this file to terraform.tfvars and update with your values
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# EC2 Configuration
+key_name      = "your-key-pair-name"
+instance_type = "t2.micro"
+
+# Security Configuration
+# Replace with your IP address for better security
+allowed_cidr_blocks = ["0.0.0.0/0"]
+
+# Project Configuration
+project_name = "simple-ec2-test"

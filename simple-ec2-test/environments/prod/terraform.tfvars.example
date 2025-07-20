@@ -1,0 +1,16 @@
+# Example Terraform Variables for Production Environment
+# Copy this file to terraform.tfvars and update with your values
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# EC2 Configuration
+key_name      = "your-key-pair-name"
+instance_type = "t2.micro"
+
+# Security Configuration - IMPORTANT: Restrict access in production
+# Replace with your organization's IP ranges
+allowed_cidr_blocks = ["10.0.0.0/8", "192.168.1.0/24"]
+
+# Project Configuration
+project_name = "simple-ec2-test"
